@@ -1,0 +1,105 @@
+<?php
+require_once __DIR__ . '/../config.php';
+require_once __DIR__ . '/../Model/Cours.php';
+
+class CoursController
+{
+    private $db;
+
+    public function __construct() {
+        $this->db = config::getConnexion();
+    }
+
+    // READ - Liste tous les cours
+    public function listCours()
+    {
+        $sql = "SELECT * FROM cours";
+        try {
+            $liste = $this->db->query($sql);
+            return $liste->fetchAll(PDO::FETCH_ASSOC);
+        } catch (Exception $e) {
+            die('Erreur: ' . $e->getMessage());
+        }
+    }
+
+    // READ - Obtenir un cours par son ID
+    public function getCoursById($id) 
+    {
+        $sql = "SELECT * FROM cours WHERE id_cours = :id";
+    
+        try {
+            $stmt = $this->db->prepare($sql);
+            $stmt->bindParam(':id', $id, PDO::PARAM_INT);
+            $stmt->execute();
+    
+            $cours = $stmt->fetch(PDO::FETCH_ASSOC);
+            return $cours ? $cours : false;
+        } catch (PDOException $e) {
+            echo 'Erreur: ' . $e->getMessage();
+            return false;
+        }
+    }
+
+    // CREATE - Ajouter un nouveau cours
+    public function addCours($cours)
+    {
+        $sql = "INSERT INTO cours (type_cours, date_cours, adresse, prix)  
+                VALUES (:type_cours, :date_cours, :adresse, :prix)";
+
+        try {
+            $query = $this->db->prepare($sql);
+            $query->execute([
+                'type_cours' => $cours->getType(),
+                'date_cours' => $cours->getDate(),
+                'adresse' => $cours->getAdresse(),
+                'prix' => $cours->getPrix()
+            ]);
+            return true;
+        } catch (Exception $e) {
+            echo 'Erreur: ' . $e->getMessage();
+            return false;
+        }
+    }
+
+    // UPDATE - Modifier un cours existant
+    public function updateCours($id, $data)
+    {
+        $sql = "UPDATE cours 
+                SET type_cours = :type_cours, 
+                    date_cours = :date_cours, 
+                    adresse = :adresse, 
+                    prix = :prix 
+                WHERE id_cours = :id";
+        
+        try {
+            $stmt = $this->db->prepare($sql);
+            $stmt->execute([
+                'type_cours' => $data['type_cours'],
+                'date_cours' => $data['date_cours'],
+                'adresse' => $data['adresse'],
+                'prix' => $data['prix'],
+                'id' => $id
+            ]);
+            return true;
+        } catch (Exception $e) {
+            echo 'Erreur: ' . $e->getMessage();
+            return false;
+        }
+    }
+
+    // DELETE - Supprimer un cours
+    public function deleteCours($id)
+    {
+        $sql = "DELETE FROM cours WHERE id_cours = :id";
+        try {
+            $req = $this->db->prepare($sql);
+            $req->bindValue(':id', $id);
+            $req->execute();
+            return true;
+        } catch (Exception $e) {
+            echo 'Erreur: ' . $e->getMessage();
+            return false;
+        }
+    }
+}
+?>
