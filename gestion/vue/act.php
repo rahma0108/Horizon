@@ -147,7 +147,7 @@ $siteTitle = "Fitsense - Club Multisports";
 </head>
 <body>
     <nav class="navbar">
-        <div class="logo">FIT SENSE</div>
+        <div class="logo">greenmove</div>
         <div class="menu">
             <a href="#">Accueil</a>
             <a href="act.php">actuallite</a>

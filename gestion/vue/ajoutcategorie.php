@@ -17,30 +17,54 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <title>Ajouter Catégorie</title>
+    <title>Ajouter une Catégorie</title>
     <script src="form_categorie.js"></script>
     <style>
         body {
+            margin: 0;
             font-family: Arial, sans-serif;
-            font-size: 18px;
-            background-color: #f5f5f5;
-            display: flex;
-            justify-content: center;
-            align-items: center;
+        }
+
+        .sidebar {
+            position: fixed;
+            width: 220px;
             height: 100vh;
+            background-color: #1e1e1e;
+            color: white;
+            padding: 20px;
+        }
+
+        .sidebar h2 {
+            font-size: 24px;
+            margin-bottom: 30px;
+        }
+
+        .sidebar a {
+            display: block;
+            color: white;
+            text-decoration: none;
+            padding: 10px 0;
+        }
+
+        .main {
+            margin-left: 250px;
+            padding: 40px;
+            background-color: #cbff39;
+            min-height: 100vh;
         }
 
         form {
             background-color: #fff;
-            padding: 35px;
+            padding: 30px;
             border-radius: 12px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-            width: 450px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+            width: 500px;
+            margin: 0 auto;
         }
 
         label {
             display: block;
-            margin-bottom: 12px;
+            margin-bottom: 15px;
             font-weight: bold;
         }
 
@@ -51,7 +75,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             margin-top: 5px;
             border: 1px solid #ccc;
             border-radius: 6px;
-            box-sizing: border-box;
         }
 
         button {
@@ -64,7 +87,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             border: none;
             border-radius: 6px;
             cursor: pointer;
-            transition: background-color 0.3s ease;
         }
 
         button:hover {
@@ -93,9 +115,69 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         .back-link:hover {
             text-decoration: underline;
         }
+
+        @media (max-width: 768px) {
+            .sidebar {
+                width: 100%;
+                height: auto;
+                position: relative;
+            }
+
+            .main {
+                margin-left: 0;
+            }
+        }
+
+        .submenu {
+            position: relative;
+        }
+
+        .submenu-links {
+            display: none;
+            margin-left: 10px;
+            margin-top: 5px;
+        }
+
+        .submenu:hover .submenu-links {
+            display: block;
+        }
+
+        .submenu-links a {
+            font-size: 14px;
+            padding: 6px 0;
+            display: block;
+            color: #ccc;
+            text-decoration: none;
+        }
+
+        .submenu-links a:hover {
+            color: white;
+            text-decoration: underline;
+        }
     </style>
 </head>
 <body>
+
+<div class="sidebar">
+    <h2>WELCOME</h2>
+    <a href="#">Dashboard</a>
+    <a href="#">Users</a>
+    <a href="#">Reservation</a>
+    <a href="#">Events</a>
+    <a href="#">Reports</a>
+    <div class="submenu">
+        <a href="#">Actualité</a>
+        <div class="submenu-links">
+            <a href="listeactualite.php">Liste d'Actualité</a>
+            <a href="ajoutercategorie.php">Catégorie</a>
+        </div>
+    </div>
+    <a href="#">Shop Details</a>
+    <a href="#">Settings</a>
+    <a href="#">Logout</a>
+</div>
+
+<div class="main">
     <form method="post" action="">
         <h2>Ajouter une Catégorie</h2>
         <?php if (!empty($erreur)) echo "<div class='error'>$erreur</div>"; ?>
@@ -104,5 +186,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         <button type="submit">Ajouter</button>
         <a href="ajoutercategorie.php" class="back-link">Retour à la liste</a>
     </form>
+</div>
+
 </body>
 </html>
