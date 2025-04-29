@@ -31,6 +31,13 @@ class Post {
         return $req->fetchAll();
     }
     
+    public static function getReactions($postId) {
+        $db = config::getConnexion();
+        $sql = "SELECT reaction, COUNT(*) as count FROM post_reactions WHERE id_post = :id GROUP BY reaction";
+        $stmt = $db->prepare($sql);
+        $stmt->execute(['id' => $postId]);
+        return $stmt->fetchAll();
+    }
     
 
    

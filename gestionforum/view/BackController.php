@@ -1,8 +1,67 @@
+<?php
+$siteTitle = "Greenmove - Forum";
+
+require_once '../config.php';
+require_once '../controller/postC.php';
+require_once '../controller/commentaireC.php';
+require_once '../model/Post.php';
+require_once '../model/Commentaire.php';
+
+$postC = new PostC();
+$commentaireC = new CommentaireC();
+
+// Initialisation de variables pour gérer l'état de l'ajout de posts/commentaires
+$success = false;
+$error = false;
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    if (isset($_POST['type']) && $_POST['type'] === 'post') {
+        if (isset($_POST['update_post'])) {
+            $postC->updatePost($_POST['post_id'], $_POST['contenu']);
+            $success = true;
+        } else {
+            $post = new Post($_POST['contenu'], 1);
+            $postC->addPost($post);
+            $success = true;
+        }
+    }
+
+    if (isset($_POST['type']) && $_POST['type'] === 'commentaire') {
+        if (isset($_POST['update_commentaire'])) {
+            $commentaireC->updateCommentaire($_POST['commentaire_id'], $_POST['contenu']);
+            $success = true;
+        } else {
+            $commentaire = new Commentaire($_POST['contenu'], $_POST['id_post'], 1);
+            $commentaireC->addCommentaire($commentaire);
+            $success = true;
+        }
+    }
+
+    // ✅ Redirection vers la même page (back-office) après action
+    header("Location: " . $_SERVER['PHP_SELF']);
+    exit();
+}
+
+if (isset($_GET['delete_post'])) {
+    $postC->deletePost($_GET['delete_post']);
+    header("Location: " . $_SERVER['PHP_SELF']);
+    exit();
+}
+
+if (isset($_GET['delete_commentaire'])) {
+    $commentaireC->deleteCommentaire($_GET['delete_commentaire']);
+    header("Location: " . $_SERVER['PHP_SELF']);
+    exit();
+}
+
+$posts = $postC->listePosts();
+?>
+
 <!DOCTYPE html>
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <title>Back Office - Gestion des Commentaires</title>
+    <title><?php echo htmlspecialchars($siteTitle); ?></title>
     <style>
         :root {
             --main-green: #c5ff38;
@@ -90,52 +149,98 @@
         .actions a:hover {
             color: #0056b3;
         }
+
+        textarea {
+            width: 100%;
+            padding: 10px;
+            margin-top: 10px;
+            background-color: #f8f9fa;
+            color: #333;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+
+        .btn {
+            background-color: var(--main-green);
+            border: none;
+            padding: 10px 20px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .btn:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
     </style>
 </head>
 <body>
 
 <div class="sidebar">
     <h2>Admin</h2>
-    <a href="forum.php">💬 Forum</a>
-    <a href="gestion_commentaires.php">🛠️ Gestion Commentaires</a>
+    <a href="dashboard.php">Dashboard</a>
+    <a href="utilisateurs.php"> Utilisateurs</a>
+    <a href="forum.php"> Forum</a>
+    <a href="reservations.php">Réservations</a>
+    <a href="magasin.php"> Magasin</a>
+    <a href="actualites.php">Actualités</a>
+    <a href="gestion_commentaires.php"> Gestion Commentaires</a>
 </div>
 
 <div class="main-content">
-    <h1>Back Office - Gestion des Commentaires</h1>
+    <h1>Forum - Publier un post</h1>
+    <?php if ($success): ?>
+        <p style="color: green;">Action réalisée avec succès !</p>
+    <?php elseif ($error): ?>
+        <p style="color: red;">Une erreur est survenue, veuillez réessayer.</p>
+    <?php endif; ?>
 
-    <?php foreach ($commentaires as $commentaire): ?>
+    <form method="post" action="forum.php">
+        <input type="hidden" name="type" value="post">
+        <textarea name="contenu" rows="4" placeholder="Écrivez ici..." required></textarea><br>
+        <input class="btn" type="submit" value="Poster">
+    </form>
+
+    <h2>Posts et Commentaires</h2>
+    <?php foreach ($posts as $post): ?>
         <div class="comment-box">
             <div class="comment">
-                <strong><?= htmlspecialchars($commentaire['auteur']) ?> :</strong>
-                <p><?= htmlspecialchars($commentaire['contenu']) ?></p>
-                <small><?= htmlspecialchars($commentaire['date']) ?></small>
-            </div>
-            <div class="actions">
-                <a href="?action=delete&id=<?= $commentaire['id'] ?>" onclick="return confirm('Supprimer ce commentaire ?');">🗑 Supprimer</a>
-                <a href="?action=disable&id=<?= $commentaire['id'] ?>" onclick="return confirm('Désactiver ce commentaire ?');">🚫 Désactiver</a>
+                <strong>Utilisateur #<?= $post['id_user'] ?> :</strong>
+                <?php if (isset($_GET['edit_post']) && $_GET['edit_post'] == $post['id']): ?>
+                    <form method="post" action="forum.php">
+                        <textarea name="contenu" rows="3"><?= htmlspecialchars($post['contenu']) ?></textarea>
+                        <input type="hidden" name="post_id" value="<?= $post['id'] ?>">
+                        <input type="hidden" name="type" value="post">
+                        <input class="btn" type="submit" name="update_post" value="Mettre à jour">
+                    </form>
+                <?php else: ?>
+                    <p><?= htmlspecialchars($post['contenu']) ?></p>
+                    <div class="actions">
+                        <a href="?edit_post=<?= $post['id'] ?>">✏️</a>
+                        <a href="?delete_post=<?= $post['id'] ?>" onclick="return confirm('Supprimer ce post ?')">🗑️</a>
+                    </div>
+                <?php endif; ?>
+
+                <!-- Affichage des commentaires -->
+                <?php
+                $commentaires = $commentaireC->getCommentairesByPostId($post['id']);
+                foreach ($commentaires as $commentaire): ?>
+                    <div class="comment">
+                        <strong>Utilisateur #<?= $commentaire['id_user'] ?> :</strong>
+                        <p><?= htmlspecialchars($commentaire['contenu']) ?></p>
+                    </div>
+                <?php endforeach; ?>
+
+                <!-- Formulaire d'ajout de commentaire -->
+                <form method="post" action="forum.php">
+                    <input type="hidden" name="id_post" value="<?= $post['id'] ?>">
+                    <input type="hidden" name="type" value="commentaire">
+                    <textarea name="contenu" rows="2" placeholder="Répondre..." required></textarea><br>
+                    <input class="btn" type="submit" value="Répondre">
+                </form>
             </div>
         </div>
     <?php endforeach; ?>
-    <h1>Back Office - Gestion du Forum</h1>
-
-<h2>📝 Tous les Posts</h2>
-<?php foreach ($posts as $post): ?>
-    <div class="comment-box">
-        <strong><?= htmlspecialchars($post['auteur']) ?> :</strong>
-        <p><?= htmlspecialchars($post['contenu']) ?></p>
-        <small>Posté le : <?= $post['date'] ?></small>
-    </div>
-<?php endforeach; ?>
-
-<h2>💬 Tous les Commentaires</h2>
-<?php foreach ($commentaires as $commentaire): ?>
-    <div class="comment-box">
-        <strong><?= htmlspecialchars($commentaire['auteur']) ?> :</strong>
-        <p><?= htmlspecialchars($commentaire['contenu']) ?></p>
-        <small>Commentaire sur le post n°<?= $commentaire['id_post'] ?> - le <?= $commentaire['date'] ?></small>
-    </div>
-<?php endforeach; ?>
-
 </div>
 
 </body>
