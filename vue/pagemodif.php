@@ -242,22 +242,22 @@ if($_SERVER["REQUEST_METHOD"]=="POST"){
     <div class="container">
         <div class="card">
             <h2><i data-lucide="plus-circle"></i> Modify Event</h2>
-            <form action="pagemodif.php?id=<?= $p['id'] ?>" method="POST">
+            <form action="pagemodif.php?id=<?= $p['id'] ?>" method="POST" id="eventForm">
                 <div class="form-group">
                     <label for="title">Event Title<span class="required">*</span></label>
-                    <input type="text" id="title" name="title" required placeholder="Enter event title" value="<?= htmlspecialchars($p['title']) ?>">
+                    <input type="text" id="title" name="title"  placeholder="Enter event title" value="<?= htmlspecialchars($p['title']) ?>">
                 </div>
                 <div class="form-group">
                     <label for="description">Description<span class="required">*</span></label>
-                    <textarea id="description" name="description" required placeholder="Enter event description"><?= htmlspecialchars($p['description']) ?></textarea>
+                    <textarea id="description" name="description"  placeholder="Enter event description"><?= htmlspecialchars($p['description']) ?></textarea>
                 </div>
                 <div class="form-group">
                     <label for="sport_type">Sport Type<span class="required">*</span></label>
-                    <input type="text" id="sport_type" name="sport_type" required placeholder="e.g., Basketball, Football" value="<?= htmlspecialchars($p['sport_type']) ?>">
+                    <input type="text" id="sport_type" name="sport_type"  placeholder="e.g., Basketball, Football" value="<?= htmlspecialchars($p['sport_type']) ?>">
                 </div>
                 <div class="form-group">
                     <label for="location">Location<span class="required">*</span></label>
-                    <input type="text" id="location" name="location" required placeholder="Enter location" value="<?= htmlspecialchars($p['location']) ?>">
+                    <input type="text" id="location" name="location"  placeholder="Enter location" value="<?= htmlspecialchars($p['location']) ?>">
                 </div>
                 <div class="form-group">
                     <label for="event_date">Event Date<span class="required">*</span></label>
@@ -265,20 +265,63 @@ if($_SERVER["REQUEST_METHOD"]=="POST"){
                 </div>
                 <div class="form-group">
                     <label for="max_participants">Maximum Participants<span class="required">*</span></label>
-                    <input type="number" name="max_participants" id="max_participants" required min="1" placeholder="Enter maximum number of participants" value="<?= htmlspecialchars($p['max_participants']) ?>">
+                    <input type="number" name="max_participants" id="max_participants"  placeholder="Enter maximum number of participants" value="<?= htmlspecialchars($p['max_participants']) ?>">
                 </div>
                 <div class="form-group">
                     <label for="created_by">Created By<span class="required">*</span></label>
-                    <input type="text" name="created_by" id="created_by" required placeholder="Enter organizer name" value="<?= htmlspecialchars($p['createdby']) ?>">
+                    <input type="text" name="created_by" id="created_by"  placeholder="Enter organizer name" value="<?= htmlspecialchars($p['createdby']) ?>">
                 </div>
                 <div class="form-group">
                     <label for="created_by">Image<span class="required">*</span></label>
-                    <input type="text" name="image" id="image" required placeholder="Enter organizer name" value="<?= htmlspecialchars($p['image']) ?>">
+                    <input type="text" name="image" id="image"  placeholder="Enter organizer name" value="<?= htmlspecialchars($p['image']) ?>">
                 </div>
                 
                 <button type="submit"><i data-lucide="plus"></i> Update Event</button>
             </form>
         </div>
     </div>
+    <script>
+    document.getElementById('eventForm').addEventListener('submit', function (e) {
+        var fields = ['title', 'description', 'sport_type', 'location', 'event_date', 'max_participants', 'created_by', 'image'];
+        var allFilled = true;
+        var firstEmpty = '';
+
+        fields.forEach(function(id) {
+            var input = document.getElementById(id);
+            if (!input.value.trim()) {
+                allFilled = false;
+                if (!firstEmpty) firstEmpty = id;
+            }
+        });
+
+        if (!allFilled) {
+            e.preventDefault();
+            alert('Please fill in all required fields.');
+            document.getElementById(firstEmpty).focus();
+        }
+        var title = document.getElementById('title').value.trim();
+        if (title.length <= 1) {
+            e.preventDefault();
+            alert('The title must be longer than 1 character.');
+            document.getElementById('title').focus();
+            return;
+        }
+        var maxParticipants = parseInt(document.getElementById('max_participants').value);
+        if (isNaN(maxParticipants) || maxParticipants <= 0) {
+            e.preventDefault();
+            alert('Maximum participants must be a number greater than 0.');
+            document.getElementById('max_participants').focus();
+            return;
+        }
+        var eventDate = new Date(document.getElementById('event_date').value);
+        var now = new Date();
+        if (eventDate <= now) {
+            e.preventDefault();
+            alert('Event date must be in the future.');
+            document.getElementById('event_date').focus();
+            return;
+        }
+    });
+</script>
 </body>
 </html>

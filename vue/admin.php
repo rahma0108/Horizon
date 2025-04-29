@@ -272,6 +272,28 @@
             alert('Please fill in all required fields.');
             document.getElementById(firstEmpty).focus();
         }
+        var title = document.getElementById('title').value.trim();
+        if (title.length <= 1) {
+            e.preventDefault();
+            alert('The title must be longer than 1 character.');
+            document.getElementById('title').focus();
+            return;
+        }
+        var maxParticipants = parseInt(document.getElementById('max_participants').value);
+        if (isNaN(maxParticipants) || maxParticipants <= 0) {
+            e.preventDefault();
+            alert('Maximum participants must be a number greater than 0.');
+            document.getElementById('max_participants').focus();
+            return;
+        }
+        var eventDate = new Date(document.getElementById('event_date').value);
+        var now = new Date();
+        if (eventDate <= now) {
+            e.preventDefault();
+            alert('Event date must be in the future.');
+            document.getElementById('event_date').focus();
+            return;
+        }
     });
 </script>
 
