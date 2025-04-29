@@ -3,6 +3,7 @@ include_once '../config.php';
 include_once '../model/Commentaire.php';
 
 class CommentaireC {
+  
     public function listeCommentaires() {
         $db = config::getConnexion();
         try {
@@ -14,7 +15,15 @@ class CommentaireC {
     }
 
     public function addCommentaire($c) {
+       
+
         $db = config::getConnexion();
+        /*if (ContentFilter::containsBadWords($post->getContenu())) {
+            die('Contenu inapproprié détecté.');
+        }*/
+        
+
+
         try {
             $req = $db->prepare("INSERT INTO commentaire (contenu, date, id_post, id_user) VALUES (:contenu, NOW(), :id_post, :id_user)");
             $req->execute([
@@ -25,6 +34,7 @@ class CommentaireC {
         } catch (Exception $e) {
             die('Erreur: ' . $e->getMessage());
         }
+        
     }
     public function getCommentairesByPostId($postId) {
         $db = config::getConnexion();
@@ -92,4 +102,30 @@ public function deleteCommentaire($id)
         $stmt = $db->prepare($sql);
         $stmt->execute([$contenu, $id]);
     }
+    public function reactToCommentaire($id_user, $id_commentaire, $reaction) {
+        $db = config::getConnexion();
+        $sql = "INSERT INTO commentaire_reactions (id_user, id_commentaire, reaction)
+                VALUES (:id_user, :id_commentaire, :reaction)
+                ON DUPLICATE KEY UPDATE reaction = :reaction";
+        $stmt = $db->prepare($sql);
+        $stmt->execute([
+            'id_user' => $id_user,
+            'id_commentaire' => $id_commentaire,
+            'reaction' => $reaction
+        ]);
+    }
+    
+    public function signalerCommentaire($id_user, $id_commentaire, $raison)
+    {
+        $db = config::getConnexion();
+        $sql = "INSERT INTO signaler_commentaire (id_user, id_commentaire, raison) VALUES (:id_user, :id_commentaire, :raison)";
+        $stmt = $db->prepare($sql);
+        $stmt->execute([
+            'id_user' => $id_user,
+            'id_commentaire' => $id_commentaire,
+            'raison' => $raison
+        ]);
+    }
+     
+    
 }

@@ -33,4 +33,13 @@ class Commentaire {
     }
     
     
+    public static function getReactions($commentaireId) {
+        $db = config::getConnexion();
+        $sql = "SELECT reaction, COUNT(*) as count FROM commentaire_reactions WHERE id_commentaire = :id GROUP BY reaction";
+        $stmt = $db->prepare($sql);
+        $stmt->execute(['id' => $commentaireId]);
+        return $stmt->fetchAll();
+    }
+     
+    
 }
