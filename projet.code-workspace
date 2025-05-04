@@ -1,0 +1,13 @@
+{
+	"folders": [
+		{
+			"path": "../testercrud/controller"
+		},
+		{
+			"path": "../testercrud/model"
+		},
+		{
+			"path": "../testercrud/vue"
+		}
+	]
+}

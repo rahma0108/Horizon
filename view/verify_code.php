@@ -1,0 +1,99 @@
+<?php
+session_start();
+$error_message = "";
+$success_message = "";
+
+if (isset($_POST['submit'])) {
+    $code = $_POST['code'];
+
+    if (isset($_SESSION['reset_code']) && $code == $_SESSION['reset_code']) {
+        header("Location: reset_password.php");
+        exit();
+    } else {
+        $error_message = "Code invalide.";
+    }
+}
+?>
+
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Vérification du code - GreenMove</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            background: url('https://images.unsplash.com/photo-1599058917212-d750089bc07e?auto=format&fit=crop&w=1920&q=80') no-repeat center center fixed;
+            background-size: cover;
+            padding: 20px;
+        }
+
+        .verify-container {
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            width: 400px;
+            margin: 100px auto;
+        }
+
+        h2 {
+            text-align: center;
+        }
+
+        label {
+            font-size: 14px;
+            margin-bottom: 5px;
+            display: block;
+        }
+
+        input[type="text"] {
+            width: 100%;
+            padding: 10px;
+            margin: 10px 0;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+
+        input[type="submit"] {
+            width: 100%;
+            padding: 10px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+
+        input[type="submit"]:hover {
+            background-color: #45a049;
+        }
+
+        .error-message {
+            color: red;
+            text-align: center;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="verify-container">
+    <h2>Vérification du code</h2>
+
+    <form method="POST">
+        <label for="code">Code de réinitialisation :</label>
+        <input type="text" name="code" id="code" required>
+
+        <input type="submit" name="submit" value="Vérifier">
+    </form>
+
+    <?php if (!empty($error_message)): ?>
+        <div class="error-message"><?= htmlspecialchars($error_message); ?></div>
+    <?php endif; ?>
+</div>
+
+</body>
+</html>
