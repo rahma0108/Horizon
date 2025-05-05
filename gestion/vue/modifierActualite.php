@@ -202,7 +202,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
             <?php endif; ?>
         </label>
         <label>Date de publication:
-            <input type="date" name="date_publication" value="<?= $actualite['date_publication'] ?>" required>
+            <input type="datetime-local" name="date_publication" value="<?= $actualite['date_publication'] ?>" required>
         </label>
         <label>Catégorie:
             <select name="id_categorie" required>

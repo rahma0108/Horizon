@@ -236,11 +236,7 @@ $liste = $actualiteC->afficherActualitesPubliées();
 </head>
 <body>
 
-<!-- 🔔 Notification -->
-<div class="notification" onclick="marquerCommeVues()">
-  <span class="notification-icon">🔔</span>
-  <span class="notification-count" id="notification-count" style="display:none;"></span>
-</div>
+
 
 <!-- Sidebar -->
 <div class="sidebar">

@@ -62,12 +62,17 @@ class ActualiteC {
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
     // 🔹 Récupérer uniquement les actualités dont la date de publication est atteinte
+// et dont la catégorie existe encore
 public function afficherActualitesPubliées() {
-    $sql = "SELECT * FROM actualites WHERE date_publication <= NOW() ORDER BY date_publication DESC";
+    $sql = "SELECT a.* FROM actualites a
+            INNER JOIN categorie_actualite c ON a.id_categorie = c.id_categorie
+            WHERE a.date_publication <= NOW()
+            ORDER BY a.date_publication DESC";
     $stmt = $this->conn->prepare($sql);
     $stmt->execute();
     return $stmt->fetchAll(PDO::FETCH_ASSOC);
 }
+
 
 
     // 🔹 Récupérer une actualité par ID
