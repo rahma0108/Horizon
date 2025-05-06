@@ -47,15 +47,23 @@ class CommentaireC {
         }
 }
 
-public function supprimerCommentaire($id) {
-    $sql = "DELETE FROM commentaire WHERE id = :id";
+/*public function deleteCommentaire($id) {
     $db = config::getConnexion();
     try {
-        $query = $db->prepare($sql);
-        $query->bindValue(':id', $id);
-        $query->execute();
-    } catch (PDOException $e) {
-        die('Erreur: ' . $e->getMessage());
+        $db->beginTransaction();
+        
+        // 1. Supprimer les réactions du commentaire
+        $db->exec("DELETE FROM commentaire_reactions WHERE id_commentaire = $id");
+        
+        // 2. Supprimer le commentaire
+        $query = $db->prepare("DELETE FROM commentaire WHERE id = :id");
+        $query->execute(['id' => $id]);
+        
+        $db->commit();
+        return true;
+    } catch (Exception $e) {
+        $db->rollBack();
+        throw new Exception("Erreur lors de la suppression : " . $e->getMessage());
     }
 }
 
@@ -87,13 +95,28 @@ public function recupererCommentaire($id) {
         die('Erreur: ' . $e->getMessage());
     }
 }*/
-public function deleteCommentaire($id)
-    {
-        $sql = "DELETE FROM commentaire WHERE id = ?";
-        $db = config::getConnexion();
-        $stmt = $db->prepare($sql);
-        $stmt->execute([$id]);
+public function deleteCommentaire($id) {
+    $db = config::getConnexion();
+    try {
+        $db->beginTransaction();
+
+        // 1. Supprimer les signalements du commentaire
+        $db->exec("DELETE FROM signaler_commentaire WHERE id_commentaire = $id");
+
+        // 2. Supprimer les réactions du commentaire
+        $db->exec("DELETE FROM commentaire_reactions WHERE id_commentaire = $id");
+
+        // 3. Supprimer le commentaire
+        $query = $db->prepare("DELETE FROM commentaire WHERE id = :id");
+        $query->execute(['id' => $id]);
+
+        $db->commit();
+        return true;
+    } catch (Exception $e) {
+        $db->rollBack();
+        throw new Exception("Erreur lors de la suppression : " . $e->getMessage());
     }
+}
 
     public function updateCommentaire($id, $contenu)
     {
@@ -115,17 +138,55 @@ public function deleteCommentaire($id)
         ]);
     }
     
-    public function signalerCommentaire($id_user, $id_commentaire, $raison)
-    {
+    public function signalerCommentaire($id_commentaire, $id_user, $raison, $details = null) {
         $db = config::getConnexion();
-        $sql = "INSERT INTO signaler_commentaire (id_user, id_commentaire, raison) VALUES (:id_user, :id_commentaire, :raison)";
-        $stmt = $db->prepare($sql);
-        $stmt->execute([
-            'id_user' => $id_user,
-            'id_commentaire' => $id_commentaire,
-            'raison' => $raison
-        ]);
+        try {
+            // Vérifier si le commentaire existe
+            $query = $db->prepare('SELECT id FROM commentaire WHERE id = :id_commentaire');
+            $query->execute(['id_commentaire' => $id_commentaire]);
+            if (!$query->fetch()) {
+                throw new Exception("Le commentaire avec l'ID $id_commentaire n'existe pas");
+            }
+    
+            // Vérifier si l'utilisateur existe
+            $query = $db->prepare('SELECT id FROM utilisateurs WHERE id = :id_user');
+            $query->execute(['id_user' => $id_user]);
+            if (!$query->fetch()) {
+                throw new Exception("L'utilisateur avec l'ID $id_user n'existe pas");
+            }
+    
+            // Insérer le signalement
+            $query = $db->prepare('INSERT INTO signaler_commentaire (id_commentaire, id_user, raison, details) 
+                                 VALUES (:id_commentaire, :id_user, :raison, :details)');
+            $result = $query->execute([
+                'id_commentaire' => $id_commentaire,
+                'id_user' => $id_user,
+                'raison' => $raison,
+                'details' => $details
+            ]);
+    
+            if (!$result) {
+                throw new Exception("Échec de l'insertion dans signaler_commentaire");
+            }
+            return true;
+        } catch (Exception $e) {
+            error_log("Erreur signalerCommentaire: " . $e->getMessage());
+            throw new Exception("Erreur lors du signalement: " . $e->getMessage());
+        }
     }
-     
+    
+    public function getSignalisationsCommentaire($id_commentaire) {
+        $db = config::getConnexion();
+        $query = $db->prepare('SELECT COUNT(*) as nb FROM signaler_commentaire WHERE id_commentaire = :id_commentaire');
+        $query->execute(['id_commentaire' => $id_commentaire]);
+        return $query->fetch()['nb'];
+    }
+    public function userAlreadyReportedComment($id_user, $id_commentaire) {
+        $db = config::getConnexion();
+        $query = $db->prepare('SELECT COUNT(*) as nb FROM signaler_commentaire 
+                              WHERE id_commentaire = :id_commentaire AND id_user = :id_user');
+        $query->execute(['id_commentaire' => $id_commentaire, 'id_user' => $id_user]);
+        return $query->fetch()['nb'] > 0;
+    } 
     
 }

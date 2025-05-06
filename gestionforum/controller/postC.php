@@ -8,29 +8,29 @@ class PostC
 {
     public function addPost(Post $post)
 {
+    // Vérification du contenu vide
+  /*  if (empty(trim($post->getContenu()))) {
+        return "Le contenu ne peut pas être vide";
+    }*/
 
-    $badWord = ContentFilter::containsBadWords($post->getContenu());
-    
-    if ($badWord !== false) {
-        // Retourne le mot interdit pour affichage dans la vue
-        return "Le mot '$badWord' n'est pas autorisé dans les posts.";
+    // Vérification des mots interdits
+    if (ContentFilter::containsBadWords($post->getContenu())) {
+        return "Désolé, votre post contient un terme inapproprié. Veuillez modifier votre texte.";
     }
 
-
-
-        $db = config::getConnexion();
-
-        try {
-            $query = $db->prepare('INSERT INTO post (contenu, date, id_user) VALUES (:contenu, :date, :id_user)');
-            $query->execute([
-                'contenu' => $post->getContenu(),
-                'date' => date('Y-m-d H:i:s'),
-                'id_user' => $post->getIdUser()
-            ]);
-        } catch (Exception $e) {
-            die('Erreur: ' . $e->getMessage());
-        }
+    $db = config::getConnexion();
+    try {
+        $query = $db->prepare('INSERT INTO post (contenu, date, id_user) VALUES (:contenu, :date, :id_user)');
+        $query->execute([
+            'contenu' => $post->getContenu(),
+            'date' => date('Y-m-d H:i:s'),
+            'id_user' => $post->getIdUser()
+        ]);
+        return true;
+    } catch (Exception $e) {
+        return "Une erreur technique est survenue. Veuillez réessayer plus tard.";
     }
+}
 
     public function listePosts()
     {
@@ -60,12 +60,40 @@ class PostC
             die('Erreur: ' . $e->getMessage());
         }
     }
-    public function deletePost($id)
-    {
-        $sql = "DELETE FROM post WHERE id = ?";
+    public function deletePost($id) {
         $db = config::getConnexion();
-        $stmt = $db->prepare($sql);
-        $stmt->execute([$id]);
+        try {
+            $db->beginTransaction();
+    
+            // 1. Supprimer les signalements des commentaires de ce post
+            $db->exec("DELETE sc FROM signaler_commentaire sc 
+                      JOIN commentaire c ON sc.id_commentaire = c.id 
+                      WHERE c.id_post = $id");
+    
+            // 2. Supprimer les réactions des commentaires de ce post
+            $db->exec("DELETE cr FROM commentaire_reactions cr 
+                      JOIN commentaire c ON cr.id_commentaire = c.id 
+                      WHERE c.id_post = $id");
+    
+            // 3. Supprimer les commentaires du post
+            $db->exec("DELETE FROM commentaire WHERE id_post = $id");
+    
+            // 4. Supprimer les signalements du post
+            $db->exec("DELETE FROM signaler_post WHERE id_post = $id");
+    
+            // 5. Supprimer les réactions du post
+            $db->exec("DELETE FROM post_reactions WHERE id_post = $id");
+    
+            // 6. Enfin supprimer le post
+            $query = $db->prepare("DELETE FROM post WHERE id = :id");
+            $query->execute(['id' => $id]);
+    
+            $db->commit();
+            return true;
+        } catch (Exception $e) {
+            $db->rollBack();
+            throw new Exception("Erreur lors de la suppression : " . $e->getMessage());
+        }
     }
 
     public function updatePost($id, $contenu)
@@ -88,19 +116,30 @@ class PostC
         ]);
     }
 
-    public function signalerPost($id_user, $id_post, $raison)
-{
-    $db = config::getConnexion();
-    $sql = "INSERT INTO signaler_post (id_user, id_post, raison) VALUES (:id_user, :id_post, :raison)";
-    $stmt = $db->prepare($sql);
-    $stmt->execute([
-        'id_user' => $id_user,
-        'id_post' => $id_post,
-        'raison' => $raison
-    ]);
-}
 
+    public function signalerPost($id_post, $id_user, $raison, $details = null) {
+        $db = config::getConnexion();
+        try {
+            $query = $db->prepare('INSERT INTO signaler_post (id_post, id_user, raison, details) 
+                                 VALUES (:id_post, :id_user, :raison, :details)');
+            $query->execute([
+                'id_post' => $id_post,
+                'id_user' => $id_user,
+                'raison' => $raison,
+                'details' => $details
+            ]);
+            return true;
+        } catch (Exception $e) {
+            throw new Exception("Erreur lors du signalement: " . $e->getMessage());
+        }
+    }
     
-   
+    public function getSignalisationsPost($id_post) {
+        $db = config::getConnexion();
+        $query = $db->prepare('SELECT COUNT(*) as nb FROM signaler_post WHERE id_post = :id_post');
+        $query->execute(['id_post' => $id_post]);
+        return $query->fetch()['nb'];
+    }
+    
 }
 ?>

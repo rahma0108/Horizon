@@ -15,8 +15,23 @@ if (isset($_POST['contenu'], $_POST['id_post'])) {
 
 ?>
 
-<form method="post">
-    <input type="hidden" name="id_post" value="<?= $_GET['id_post'] ?? 1 ?>">
-    <textarea name="contenu" placeholder="Votre commentaire" required></textarea>
+<form method="post" onsubmit="return validateCommentForm();">
+    <textarea name="contenu" id="commentContenu" placeholder="Écrivez votre commentaire ici..."></textarea>
+    <div id="commentError" style="color: red; margin-top: 5px;"></div>
     <input type="submit" value="Commenter">
 </form>
+
+<script>
+function validateCommentForm() {
+    const contenu = document.getElementById('commentContenu').value.trim();
+    const errorDiv = document.getElementById('commentError');
+
+    if (contenu === "") {
+        errorDiv.textContent = "Erreur : le contenu du commentaire ne peut pas être vide.";
+        return false;
+    }
+
+    errorDiv.textContent = "";
+    return true;
+}
+</script>
